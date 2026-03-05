@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+	<sub-flow name="post-customers" doc:id="1244b77b-ca73-4f3b-9a35-cc10bc583892" >
+		<flow-ref doc:name="supabaseQuery" doc:id="033cca58-16d6-41e8-aa43-5da5069274fa" name="supabaseQuery" />
+		<ee:transform doc:name="response">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+vars.response[0]]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<set-variable value="#[201]" doc:name="httpStatus" doc:id="27b9383a-b7a2-4251-a750-704abb1f2f06" variableName="httpStatus" />
+	</sub-flow>
+	<sub-flow name="get-customers-id" doc:id="6db2ae92-05a0-46a5-9adb-d426ac2f7e36" >
+		<flow-ref doc:name="supabaseQuery" doc:id="0d624c7c-7d4a-464a-b68b-dbcbe1b82064" name="supabaseQuery" />
+		<ee:transform doc:name="response">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json --- 
+if(isEmpty(vars.response)) ("message": "Customer not found") else vars.response[0]]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<set-variable value="#[if(isEmpty(vars.response)) 404 else 200]" doc:name="httpStatus" doc:id="815a559c-31c9-4564-a3d5-48fa6de05fa1" variableName="httpStatus" />
+	</sub-flow>
+	<sub-flow name="get-customers" doc:id="f5d33401-ac4f-46de-8086-26a4bc374369" >
+		<flow-ref doc:name="supabaseQuery" doc:id="0d47d38c-f9c0-4271-a44e-2ca1667e652f" name="supabaseQuery" />
+		<ee:transform doc:name="response" doc:id="57a63596-5c1c-4b62-af75-0996cb033a41" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json --- 
+if(isEmpty(vars.response)) ("message": "Customers not found") else vars.response]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[if(isEmpty(vars.response)) 404 else 200]" doc:name="httpStatus" doc:id="98bae80e-77f6-47d5-bff8-56e29de0d510" variableName="httpStatus" />
+	</sub-flow>
+	<sub-flow name="delete-customers" doc:id="b3ec2d43-287f-4e97-a491-1dd5b8f2ffc3" >
+		<flow-ref doc:name="supabaseQuery" doc:id="801edb8a-98d2-4dac-80b2-eb264554aac1" name="supabaseQuery" />
+		<ee:transform doc:name="response" doc:id="e0a165a9-414a-4570-bf45-284638babae3">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+("message": "Customer not found") if(isEmpty(vars.response))]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[if(isEmpty(vars.response)) 404 else 204]" doc:name="httpStatus" doc:id="cb1f9e55-04f0-4431-a051-1c82ca9dd7dd" variableName="httpStatus"/>
+	</sub-flow>
+	<sub-flow name="patch-customers" doc:id="afd2af14-8d5b-4b0b-aa28-ce862a70b7d3">
+		<flow-ref doc:name="supabaseQuery" doc:id="2edce6d7-02a1-4429-99dc-d0b9ce908b48" name="supabaseQuery" />
+		<ee:transform doc:name="response" doc:id="1f76e20f-0fd6-4676-ac2a-cef11779bfca">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+if(isEmpty(vars.response)) ("message": "Customer not found") else vars.response[0]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[if(isEmpty(vars.response)) 404 else 200]" doc:name="httpStatus" doc:id="749cfff8-9eb9-4e4a-83d2-e9c0d6b83575" variableName="httpStatus" />
+	</sub-flow>
+</mule>

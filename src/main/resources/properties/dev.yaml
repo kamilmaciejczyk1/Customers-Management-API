@@ -1,0 +1,16 @@
+autodiscovery:
+  id: "20771200"
+
+mule:
+  env: "dev"
+  
+http:  
+  port: "8081"
+  readTimeout: "30000"
+  
+supabase:
+  host: "qymfpytyyounzjnnchmd.supabase.co"
+  basePath: "/rest/v1"
+  customersEndpoint: "/customers"
+  responseTimeout: "30000"
+  port: "443"

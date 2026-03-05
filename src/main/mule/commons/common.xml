@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<sub-flow name="common" doc:id="f90e2b48-f2c5-43e6-ac4d-a136fc11685f" >
+		<set-variable value="#[attributes.uriParams.'id']" doc:name="uriParamsId" doc:id="133d6b6e-cd0c-407c-a15c-9a7e7b619273" variableName="uriParamsId"/>
+		<set-variable value="#[attributes.queryParams]" doc:name="queryParams" doc:id="b9a508f0-758e-4fa5-93b7-e7f439dbe48a" variableName="queryParams"/>
+	</sub-flow>
+	<sub-flow name="supabaseQuery" doc:id="d801cfcc-5690-40c6-adc2-5f6d0ebc371a" >
+		<set-variable value='#[%dw 2.0&#10;output application/json&#10;var time = now() as DateTime &#10;var method = attributes.method&#10;---&#10;method match {&#10;  case "PATCH"  -&gt; (payload default {}) ++ { updatedAt: time }&#10;  case "POST" -&gt; (payload default {}) ++ { createdAt: time, updatedAt: time }&#10;  else -&gt; {}   &#10;}]' doc:name="body" doc:id="7f9bed41-966f-441c-a422-66d496c730fe" variableName="body" />
+		<set-variable value='#[attributes.method]' doc:name="method" doc:id="42f6f802-5d42-4ed0-a961-88c2625cfb0a" variableName="method" />
+		<set-variable value='#[output application/java&#10;---&#10;{&#10;	(email : "eq." ++ vars.queryParams.email) if(!isEmpty(vars.queryParams.email)),&#10;	(lastName : "eq." ++ vars.queryParams.lastName) if(!isEmpty(vars.queryParams.lastName)),&#10;	(id : "eq." ++ vars.uriParamsId) if(!isEmpty(vars.uriParamsId))&#10;}]' doc:name="queryParams" doc:id="9961e5d0-d749-493f-b338-fb0b9b631190" variableName="queryParams" />
+		<http:request doc:name="supabase" doc:id="5ecbdc54-3494-450c-b86c-942d5d34a5a3" config-ref="HTTP_Request_config_database" method="#[vars.method]" path="${supabase.customersEndpoint}" target="response" >
+			<http:body ><![CDATA[#[vars.body]]]></http:body>
+			<http:headers ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	"Content-Type": "application/json",
+	"Prefer": "return=representation"
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[vars.queryParams]]]></http:query-params>
+		</http:request>
+	</sub-flow>
+</mule>

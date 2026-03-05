@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+    <apikit:config name="customers-management-api-config" api="resource::faec3b29-a6dd-4f82-bea4-0297b54f678d:customers-management-api:1.0.7:raml:zip:customers-management-api.raml" outboundHeadersMapName="outboundHeadersMapName" httpStatusVarName="httpStatus" />
+    <configuration-properties doc:name="Configuration properties" doc:id="4b793885-8adf-4698-bfe5-95592e17a34c" file="properties/${mule.env}.yaml" />
+    <configuration doc:name="Configuration" doc:id="57846489-d32a-4a25-aa4a-3ea0b15ffc09" defaultErrorHandler-ref="globalError_Handler" />
+    <http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="88ed295d-f50b-413c-9754-2cd38f71692f">
+        <http:listener-connection host="0.0.0.0" port="${http.port}" readTimeout="${http.readTimeout}" />
+    </http:listener-config>
+    <api-gateway:autodiscovery apiId="${autodiscovery.id}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="efe087ba-744e-47fa-bba7-e5ed0b31dc28" flowRef="customers-management-api-main" />
+    <http:request-config name="HTTP_Request_config_database" doc:name="HTTP Request config" doc:id="cd67eac1-2eab-42fb-be97-c92b73be0c3d" basePath="${supabase.basePath}" responseTimeout="${supabase.responseTimeout}" followRedirects="false">
+        <http:request-connection protocol="HTTPS" host="${supabase.host}" port="${supabase.port}" />
+        <http:default-headers>
+            <http:default-header key="apiKey" value="${supabase.apiKey}" />
+        </http:default-headers>
+    </http:request-config>
+    <error-handler name="globalError_Handler" doc:id="47519d5a-b41f-4053-a51f-7b6055249c41">
+        <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="cc461376-240e-49c9-9c27-1bf2096cdb1d" type="APIKIT:BAD_REQUEST">
+            <ee:transform doc:name="Transform Message" doc:id="dca53d6a-049f-404e-9f1a-afea4711a1b6">
+                <ee:message>
+                </ee:message>
+                <ee:variables>
+                    <ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+					<ee:set-variable variableName="errorBody" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": error.description default "Bad request"
+}]]></ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+        </on-error-propagate>
+        <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="4ca827fb-bc35-4eef-b907-aed24a7844de" type="APIKIT:NOT_FOUND">
+            <ee:transform doc:name="Transform Message" doc:id="1540fd9d-148c-484d-92a4-450ac6d2e34f">
+                <ee:message>
+                </ee:message>
+                <ee:variables>
+                    <ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+					<ee:set-variable variableName="errorBody" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Resource not found"
+}]]></ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+        </on-error-propagate>
+        <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="57ec5326-8ea8-41c5-892b-870b795a9a5a" type="APIKIT:NOT_ACCEPTABLE">
+            <ee:transform doc:name="Transform Message" doc:id="1ab63d40-c2ac-4a77-9e8a-c537e9c0a2fc">
+                <ee:message>
+                </ee:message>
+                <ee:variables>
+                    <ee:set-variable variableName="httpStatus"><![CDATA[406]]></ee:set-variable>
+					<ee:set-variable variableName="errorBody" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Not acceptable"
+}]]></ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+        </on-error-propagate>
+        <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="a739f830-2a6c-4e3d-8438-960c9e61ff8f" type="APIKIT:METHOD_NOT_ALLOWED">
+            <ee:transform doc:name="Transform Message" doc:id="479fe0d5-9c09-4872-8224-0e84b24f02d1">
+                <ee:message>
+                </ee:message>
+                <ee:variables>
+                    <ee:set-variable variableName="httpStatus"><![CDATA[405]]></ee:set-variable>
+					<ee:set-variable variableName="errorBody" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Method not allowed"
+}]]></ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+        </on-error-propagate>
+        <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="62dfa912-bee8-4cfc-b542-32fe4897f63d" type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+            <ee:transform doc:name="Transform Message" doc:id="a518a079-dcff-43d7-a2bd-0682ce39e4b5">
+                <ee:message>
+                </ee:message>
+                <ee:variables>
+                    <ee:set-variable variableName="httpStatus"><![CDATA[415]]></ee:set-variable>
+					<ee:set-variable variableName="errorBody" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Unsupported media type"
+}]]></ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+        </on-error-propagate>
+        <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="373416d7-24b5-469b-a6a6-5b7ac48812c0" type="APIKIT:NOT_IMPLEMENTED">
+            <ee:transform doc:name="Transform Message" doc:id="4a38a0a4-567a-4a29-9c44-265e26f9cdff">
+                <ee:message>
+                </ee:message>
+                <ee:variables>
+                    <ee:set-variable variableName="httpStatus"><![CDATA[501]]></ee:set-variable>
+					<ee:set-variable variableName="errorBody" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Not Implemented"
+}]]></ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+        </on-error-propagate>
+    </error-handler>
+</mule>
