@@ -644,7 +644,7 @@ Run tests using Maven:
 
 ```
 
-mvn clean test
+mvn clean test -Dmule.env=dev -Dsupabase.apiKey=test
 
 ```
 
