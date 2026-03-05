@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="customers-test-suite.xml" />
+	<munit:test name="patch-customers-success" doc:id="8c701fb7-d1fe-4e65-b1fd-2f8d6922113c" description="Success scenario for patch-customers" timeOut="120000">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="supabase" doc:id="b37fdb57-e455-4554-ba67-dbf2b6b0b5bf" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="5ecbdc54-3494-450c-b86c-942d5d34a5a3" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="response" value="#[%dw 2.0 output application/json --- readUrl('classpath://output-payloads/200-patch-customers-response.json', 'application/json')]" mediaType="application/json" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="payload" doc:id="dced7a80-85e7-4764-a62a-e8fb93a5c6cb" >
+				<munit:payload value="#[%dw 2.0 output application/json --- readUrl('classpath://input-payloads/200-patch-customers-request.json', 'application/json')]" encoding="UTF-8" mediaType="application/json" />
+				<munit:attributes value="#[{&#10;	&quot;uriParams&quot;: {id: '123'},&#10;	&quot;method&quot;: &quot;PATCH&quot;&#10;}]" />
+			</munit:set-event>
+			<flow-ref doc:name="patch-customers" doc:id="435fa457-297f-46c2-ac3c-131370721498" name="patch:\customers\(id):application\json:customers-management-api-config"/>
+		</munit:execution>
+		<munit:validation >
+			<ee:transform doc:name="response" doc:id="3c1edcf1-6c2c-4147-9c60-f35c23ac8d35" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="expectedResponse" ><![CDATA[%dw 2.0
+output application/json
+---
+(readUrl('classpath://output-payloads/200-patch-customers-response.json', 'application/json'))[0] - "updatedAt" ++ {"updatedAt": payload.updatedAt}]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<munit-tools:assert-that doc:name="Assert payload" doc:id="f4945779-1136-4880-be3e-0ceb84b3ff00" expression="#[payload]" is="#[MunitTools::equalTo(vars.expectedResponse)]" message='#["Payload does not match to the expected value"]'/>
+			<munit-tools:assert-that doc:name="Assert status 200" doc:id="ab292884-5335-4f1c-b991-1fde8b8fef93" is="#[MunitTools::equalTo(200)]" message='#["status code is not correct"]' expression="#[vars.httpStatus]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="patch-customers-failed" doc:id="93d4e041-d021-4ff9-a927-1615997bc4a5" description="Failed scenario for patch-customers - customer not found" timeOut="120000" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="supabase" doc:id="32ab1d62-2214-467d-92ce-cb7af7862610" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="5ecbdc54-3494-450c-b86c-942d5d34a5a3" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="payload" doc:id="15d8351b-b114-46a7-9a02-3f363ff0565b" >
+				<munit:payload value="#[%dw 2.0 output application/json --- readUrl('classpath://input-payloads/200-patch-customers-request.json', 'application/json')]" encoding="UTF-8" mediaType="application/json" />
+				<munit:attributes value="#[{&#10;	&quot;uriParams&quot;: {id: '1111'},&#10;	&quot;method&quot;: &quot;PATCH&quot;&#10;}]" />
+			</munit:set-event>
+			<flow-ref doc:name="patch-customers" doc:id="28574499-6c9f-42f3-9978-dd10318af647" name="patch:\customers\(id):application\json:customers-management-api-config" />
+		</munit:execution>
+		<munit:validation >
+			<ee:transform doc:name="response" doc:id="aed4791a-abac-48c9-a928-df4b57776ecb" >
+				<ee:message />
+				<ee:variables >
+					<ee:set-variable variableName="expectedResponse" ><![CDATA[%dw 2.0
+output application/json
+---
+(readUrl('classpath://output-payloads/404-customers-response.json', 'application/json'))]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<munit-tools:assert-that doc:name="Assert payload" doc:id="f304e09e-9ee2-4c00-90b5-164a6616654e" message='#["Payload does not match to the expected value"]' expression="#[payload]" is="#[MunitTools::equalTo(vars.expectedResponse)]" />
+			<munit-tools:assert-that doc:name="Assert status 404" doc:id="6966cf55-44c1-4d07-b8f3-8deb4922f77b" message='#["status code is not correct"]' expression="#[vars.httpStatus]" is="#[MunitTools::equalTo(404)]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="delete-customers-success" doc:id="723483f4-91a2-4537-ba09-13c549f8ee29" description="Success scenario for delete-customers" timeOut="120000" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="supabase" doc:id="1e75535d-b128-4408-8802-265a571c571b" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="5ecbdc54-3494-450c-b86c-942d5d34a5a3" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="response" value="#[%dw 2.0 output application/json --- readUrl('classpath://output-payloads/200-delete-customers-response.json', 'application/json')]" mediaType="application/json" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="payload" doc:id="a41da807-4a8b-4dca-b398-8f98d0b460f5" >
+				<munit:attributes value="#[{&#10;	&quot;uriParams&quot;: {id: '123'},&#10;	&quot;method&quot;: &quot;DELETE&quot;&#10;}]" />
+			</munit:set-event>
+			<flow-ref doc:name="delete-customers" doc:id="03a5799a-3a55-434e-9b62-9248e59c3870" name="delete:\customers\(id):customers-management-api-config" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert payload" doc:id="23ca0fe1-e885-4f5c-b65b-bc283e7df477" message='#["Payload does not match to the expected value"]' expression="#[payload]" is='#[MunitTools::equalTo({})]' />
+			<munit-tools:assert-that doc:name="Assert status 204" doc:id="4202b070-f656-4ee8-a098-c3b8f8b70129" message='#["status code is not correct"]' is="#[MunitTools::equalTo(204)]" expression="#[vars.httpStatus]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="delete-customers-failed" doc:id="ba86bcc5-c029-45ba-a34d-21aa6a0bb5d4" description="Failed scenario for delete-customers - customer not found" timeOut="120000" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="supabase" doc:id="5ea0a766-f962-45c3-bc94-de3ddb1079f9" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="5ecbdc54-3494-450c-b86c-942d5d34a5a3" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="payload" doc:id="44808735-ece6-48ca-b7b7-4150c6e667e3" >
+				<munit:attributes value="#[{&#10;	&quot;uriParams&quot;: {id: '1211113'},&#10;	&quot;method&quot;: &quot;DELETE&quot;&#10;}]" />
+			</munit:set-event>
+			<flow-ref doc:name="delete-customers" doc:id="a282e964-24e4-497e-8387-d46a0fe41d12" name="delete:\customers\(id):customers-management-api-config" />
+		</munit:execution>
+		<munit:validation >
+			<ee:transform doc:name="response" doc:id="6c7c2879-f561-4b9b-a0cd-da8eaccfb557">
+				<ee:message />
+				<ee:variables>
+					<ee:set-variable variableName="expectedResponse"><![CDATA[%dw 2.0
+output application/json
+---
+(readUrl('classpath://output-payloads/404-customers-response.json', 'application/json'))]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<munit-tools:assert-that doc:name="Assert payload" doc:id="be8e5a50-56b5-4aef-8fcb-2dd52e731948" message='#["Payload does not match to the expected value"]' expression="#[payload]" is="#[MunitTools::equalTo(vars.expectedResponse)]" />
+			<munit-tools:assert-that doc:name="Assert status 404" doc:id="68a66baa-d771-47b8-882f-9ecc1a7f82a1" message='#["status code is not correct"]' expression="#[vars.httpStatus]" is="#[MunitTools::equalTo(404)]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="get-customers-success" doc:id="5f6ef3bf-c7ae-4dc1-ac76-1507816d1ec7" description="Success scenario for get-customers" timeOut="120000" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="supabase" doc:id="3393849b-1f2b-4b69-859f-11dd2a3dab42" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="5ecbdc54-3494-450c-b86c-942d5d34a5a3" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="response" value="#[%dw 2.0 output application/json --- readUrl('classpath://output-payloads/200-get-customers-response.json', 'application/json')]" mediaType="application/json" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="payload" doc:id="2d4716a7-d783-4253-8e03-67fef0bb32d4" >
+				<munit:attributes value='#[{&#10;	"method": "GET"&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="get-customers" doc:id="c46b115d-d421-4470-97d2-f27271b112f0" name="get:\customers:customers-management-api-config" />
+		</munit:execution>
+		<munit:validation >
+			<ee:transform doc:name="response" doc:id="62638422-7b99-4168-a549-20bc75ce9a90" >
+				<ee:message />
+				<ee:variables >
+					<ee:set-variable variableName="expectedResponse" ><![CDATA[%dw 2.0
+output application/json
+---
+(readUrl('classpath://output-payloads/200-get-customers-response.json', 'application/json'))]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<munit-tools:assert-that doc:name="Assert payload" doc:id="ae8c5030-c096-45ea-99ce-1c7db8609b46" message='#["Payload does not match to the expected value"]' expression="#[payload]" is="#[MunitTools::equalTo(vars.expectedResponse)]" />
+			<munit-tools:assert-that doc:name="Assert status 200" doc:id="7fa2108a-a505-44c4-a6dc-bfc4aedd1f6b" message='#["status code is not correct"]' is="#[MunitTools::equalTo(200)]" expression="#[vars.httpStatus]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="get-customers-failed" doc:id="6acac53d-aa57-4c93-87d2-64847446ad6a" description="Failed scenario for get-customers" timeOut="120000" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="supabase" doc:id="28fbbc1d-7085-4176-9ee0-72206599c0f5" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="5ecbdc54-3494-450c-b86c-942d5d34a5a3" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="payload" doc:id="d747cf0b-91c0-4c78-9af9-16069f976f85" >
+				<munit:attributes value='#[{&#10;	"method": "GET"&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="get-customers" doc:id="2a0f7fce-4c34-4402-94e6-f7eb4f44aee5" name="get:\customers:customers-management-api-config" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert payload" doc:id="3f6a8d32-52ac-4777-bf89-6c4968fc60ad" message='#["Payload does not match to the expected value"]' expression="#[payload]" is='#[MunitTools::equalTo({"message": "Customers not found"})]' />
+			<munit-tools:assert-that doc:name="Assert status 404" doc:id="f23600ea-5a7f-4f6e-b381-aff81908f46b" message='#["status code is not correct"]' is="#[MunitTools::equalTo(404)]" expression="#[vars.httpStatus]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="post-customers-success" doc:id="c1bd1f6d-d52f-402c-9a54-60250cb685c9" description="Success scenario for post-customers" timeOut="120000" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="supabase" doc:id="7dee2b63-48d9-4d8e-9957-d5b434f5d72c" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="5ecbdc54-3494-450c-b86c-942d5d34a5a3" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:variables >
+						<munit-tools:variable key="response" value="#[%dw 2.0 output application/json --- readUrl('classpath://output-payloads/200-post-customers-response.json', 'application/json')]" mediaType="application/json" encoding="UTF-8" />
+					</munit-tools:variables>
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="payload" doc:id="affb8d2f-fbf7-4cca-9982-0556fedb88ba" >
+				<munit:payload value="#[%dw 2.0 output application/json --- readUrl('classpath://input-payloads/200-post-customers-request.json', 'application/json')]" encoding="UTF-8" mediaType="application/json" />
+				<munit:attributes value='#[{&#10;	"method": "POST"&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="post-customers" doc:id="7ae97a72-ccc7-4b52-a2c8-09ca5aecffae" name="post:\customers:application\json:customers-management-api-config" />
+		</munit:execution>
+		<munit:validation >
+			<ee:transform doc:name="response" doc:id="1f40dd06-a559-4693-bc19-8d845e569bd8" >
+				<ee:message />
+				<ee:variables >
+					<ee:set-variable variableName="expectedResponse" ><![CDATA[%dw 2.0
+output application/json
+---
+(readUrl('classpath://output-payloads/200-post-customers-response.json', 'application/json'))[0] - "updatedAt" - "createdAt" ++ {"updatedAt": payload.updatedAt,"createdAt": payload.createdAt}]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<munit-tools:assert-that doc:name="Assert payload" doc:id="24226d5d-6b58-467b-a088-27932425712d" message='#["Payload does not match to the expected value"]' expression="#[payload]" is="#[MunitTools::equalTo(vars.expectedResponse)]" />
+			<munit-tools:assert-that doc:name="Assert status 201" doc:id="71c492a3-7f7d-46ab-851c-5e0d5d443d11" message='#["status code is not correct"]' is="#[MunitTools::equalTo(201)]" expression="#[vars.httpStatus]" />
+		</munit:validation>
+	</munit:test>
+
+</mule>

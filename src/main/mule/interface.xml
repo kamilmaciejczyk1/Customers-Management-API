@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <flow name="customers-management-api-main" doc:id="90fe06f6-f1b5-4801-9896-c904760995d1">
+        <http:listener path="/api/*" config-ref="HTTP_Listener_config">
+            <http:response statusCode="#[vars.httpStatus]" />
+            <http:error-response statusCode="#[vars.httpStatus]">
+                <http:body><![CDATA[#[vars.errorBody]]]></http:body>
+            </http:error-response>
+        </http:listener>
+        <apikit:router doc:name="APIkit Router" doc:id="4a0f28b1-a087-417b-a358-3b4a11779b2f" config-ref="customers-management-api-config" />
+        <error-handler ref="globalError_Handler" />
+    </flow>
+    <flow name="patch:\customers\(id):application\json:customers-management-api-config" doc:id="945a663b-a8b4-45f2-9077-bc18d3647d30">
+        <flow-ref doc:name="input parameters" doc:id="352bfebe-1996-44e5-a86e-0eb768fe643a" name="common" />
+        <flow-ref doc:name="patch-customers" doc:id="990a364a-a3ad-42cc-b52f-37df5808cb7d" name="patch-customers" />
+        <error-handler ref="globalError_Handler" />
+    </flow>
+    <flow name="delete:\customers\(id):customers-management-api-config" doc:id="4ae1b1ae-8aa0-4480-b89f-71c995193f69">
+        <flow-ref doc:name="input parameters" doc:id="0594c3bb-64b7-494b-adeb-9fcf5b33e483" name="common" />
+        <flow-ref doc:name="delete-customers" doc:id="cc25b168-6159-4c7d-a02f-10c10f3f064f" name="delete-customers" />
+        <error-handler ref="globalError_Handler" />
+    </flow>
+    <flow name="get:\customers:customers-management-api-config" doc:id="b7ce594a-75c5-4ae6-9b11-d587c0e5d538">
+        <flow-ref doc:name="input parameters" doc:id="540b66d9-0510-4a66-bb7d-fd4ab676644b" name="common" />
+        <flow-ref doc:name="get-customers" doc:id="f2de01df-cad7-43e8-8976-55859dee3019" name="get-customers" />
+        <error-handler ref="globalError_Handler" />
+    </flow>
+    <flow name="get:\customers\(id):customers-management-api-config">
+        <flow-ref doc:name="input parameters" doc:id="b6148dd5-476b-4046-a52f-f782e877ea9d" name="common" />
+        <flow-ref doc:name="get-customers-id" doc:id="f9aa81a5-8fbd-4ae2-88b5-093fdbebf1f2" name="get-customers-id" />
+        <error-handler ref="globalError_Handler" />
+    </flow>
+    <flow name="post:\customers:application\json:customers-management-api-config" doc:id="8c469a0c-fc72-4ab5-9947-318fd30d4b71">
+        <flow-ref doc:name="input parameters" doc:id="1419df69-753e-4517-bad0-a9d1d0da4892" name="common" />
+        <flow-ref doc:name="post-customers" doc:id="8f5e356c-7d75-41b4-a319-965559057e19" name="post-customers" />
+        <error-handler ref="globalError_Handler" />
+    </flow>
+</mule>
